@@ -1,0 +1,23 @@
+stages:
+  - build
+  - push
+
+variables:
+  IMAGE_NAME: imtorya/kanban-backend
+
+build_backend:
+  stage: build
+  tags:
+    - docker
+
+  script:
+    - docker build -t $IMAGE_NAME:latest .
+
+push_backend:
+  stage: push
+  tags:
+    - docker
+
+  script:
+    - docker login -u $DOCKER_USER -p $DOCKER_PASS
+    - docker push $IMAGE_NAME:latest
