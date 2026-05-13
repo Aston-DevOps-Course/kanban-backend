@@ -19,3 +19,22 @@ jobs:
 
       - name: Push image
         run: docker push ${{ secrets.DOCKER_USER }}/kanban-backend:latest
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via Proxmox → LXC
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROXMOX_HOST }}
+          username: root
+          key: ${{ secrets.SSH_KEY }}
+
+          script: |
+            pct exec 140 -- bash -c "
+              cd /opt/kanban/task7 &&
+              docker compose pull &&
+              docker compose up -d
+            "
