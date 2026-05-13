@@ -1,18 +1,21 @@
-name: Backend CI
+name: Backend CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
-  build:
+
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
+
       - uses: actions/checkout@v4
 
-      - name: Login DockerHub
-        run: echo "${{ secrets.DOCKER_PASS }}" | docker login -u "${{ secrets.DOCKER_USER }}" --password-stdin
+      - name: Login Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USER }} -p ${{ secrets.DOCKER_PASS }}
 
       - name: Build image
         run: docker build -t ${{ secrets.DOCKER_USER }}/kanban-backend:latest .
@@ -25,16 +28,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via Proxmox → LXC
-        uses: appleboy/ssh-action@v1.0.3
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+
         with:
-          host: ${{ secrets.PROXMOX_HOST }}
-          username: root
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
 
           script: |
-            pct exec 140 -- bash -c "
-              cd /opt/kanban/task7 &&
-              docker compose pull &&
-              docker compose up -d
-            "
+            cd /opt/kanban/task7
+            docker compose pull backend
+            docker compose up -d backend
